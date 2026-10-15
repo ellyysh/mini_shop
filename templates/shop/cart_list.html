@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Корзины — {{ block.super }}{% endblock %}
+
+{% block content %}
+    <h1>Корзины покупателей</h1>
+
+    <form class="filters" method="get">
+        <input type="search" name="q" value="{{ query }}" placeholder="Покупатель, e-mail или товар">
+        <select name="status">
+            <option value="">Все статусы</option>
+            {% for value, label in statuses %}
+                <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Найти</button>
+        {% if query or current_status %}<a class="reset" href="{% url 'cart_list' %}">Сбросить</a>{% endif %}
+    </form>
+
+    <p class="count">Найдено корзин: {{ carts|length }}</p>
+
+    <div class="carts">
+        {% for cart in carts %}
+            <article class="cart">
+                <div class="cart-head">
+                    <h2>Корзина №{{ cart.id }}</h2>
+                    <span class="badge badge-{{ cart.status }}">{{ cart.get_status_display }}</span>
+                </div>
+
+                <div class="customer">
+                    <strong>{{ cart.customer.name }}</strong>
+                    <span>{{ cart.customer.email }}</span>
+                    {% if cart.customer.phone %}<span>{{ cart.customer.phone }}</span>{% endif %}
+                </div>
+
+                {% with products=cart.products.all %}
+                    <p class="label">Товары ({{ products|length }}):</p>
+                    <ul class="products">
+                        {% for p in products %}
+                            <li>
+                                <span>{{ p.name }}</span>
+                                <span class="price">{{ p.price|floatformat:2 }} ₽</span>
+                            </li>
+                        {% empty %}
+                            <li class="empty">Корзина пуста</li>
+                        {% endfor %}
+                    </ul>
+                {% endwith %}
+
+                <div class="cart-foot">
+                    <span class="date">Создана {{ cart.created_at|date:"d.m.Y H:i" }}</span>
+                    <span class="total">Итого: {{ cart.total_price|floatformat:2 }} ₽</span>
+                </div>
+            </article>
+        {% empty %}
+            <p class="empty">Корзин не найдено.</p>
+        {% endfor %}
+    </div>
+{% endblock %}
